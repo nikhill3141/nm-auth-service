@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NM Auth Service - OAuth 2.0 & OpenID Connect | Enterprise Identity</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a0e27;
+      --bg-secondary: #151829;
+      --bg-tertiary: #1f2937;
+      --accent-primary: #10b981;
+      --accent-secondary: #14b8a6;
+      --accent-light: #6ee7b7;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-tertiary: #94a3b8;
+      --border-color: #334155;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, #0f1428 100%);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ==================== ANIMATED BACKGROUND ==================== */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .gradient-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.15;
+    }
+
+    .blob-1 {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--accent-primary), transparent);
+      top: -200px;
+      right: -100px;
+      animation: float1 15s ease-in-out infinite;
+    }
+
+    .blob-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--accent-secondary), transparent);
+      bottom: -100px;
+      left: 10%;
+      animation: float2 18s ease-in-out infinite;
+    }
+
+    .blob-3 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, #7c3aed, transparent);
+      top: 40%;
+      right: 5%;
+      animation: float3 20s ease-in-out infinite;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(50px, -50px); }
+    }
+
+    @keyframes float2 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-50px, 50px); }
+    }
+
+    @keyframes float3 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-30px, -30px); }
+    }
+
+    /* ==================== NAVIGATION ==================== */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(20px);
+      background: rgba(10, 14, 39, 0.7);
+      border-bottom: 1px solid rgba(100, 116, 139, 0.1);
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    nav-links {
+      display: flex;
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    nav a:hover {
+      color: var(--text-primary);
+    }
+
+    nav a:hover::after {
+      width: 100%;
+    }
+
+    .nav-cta {
+      padding: 0.7rem 1.8rem;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+    }
+
+    .nav-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px rgba(16, 185, 129, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      nav {
+        padding: 1rem 1.5rem;
+      }
+
+      nav-links {
+        display: none;
+      }
+    }
+
+    /* ==================== HERO SECTION ==================== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(180deg, 
+        rgba(16, 185, 129, 0.08) 0%, 
+        transparent 50%, 
+        rgba(15, 20, 40, 0.8) 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero-content {
+      max-width: 800px;
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      padding: 0.5rem 1.2rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-primary);
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(10px);
+      animation: slideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    .hero h1 {
+      font-size: 4.2rem;
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, 
+        var(--text-primary) 0%, 
+        var(--text-secondary) 50%,
+        var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
+    }
+
+    .hero-subtitle {
+      font-size: 1.4rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+      font-weight: 400;
+      animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+      opacity: 0;
+    }
+
+    .hero-description {
+      font-size: 1.1rem;
+      color: var(--text-tertiary);
+      margin-bottom: 3rem;
+      line-height: 1.7;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+      opacity: 0;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+      opacity: 0;
+    }
+
+    .btn-primary {
+      padding: 1rem 2.5rem;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 15px 40px rgba(16, 185, 129, 0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 0;
+    }
+
+    .btn-primary:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 25px 60px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-secondary {
+      padding: 1rem 2.5rem;
+      background: transparent;
+      border: 2px solid var(--border-color);
+      color: var(--text-primary);
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent-primary);
+      background: rgba(16, 185, 129, 0.05);
+      transform: translateY(-2px);
+      color: var(--accent-primary);
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: bounce 2s infinite;
+    }
+
+    .scroll-indicator i {
+      font-size: 1.5rem;
+      color: var(--accent-primary);
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(10px); }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero {
+        min-height: 80vh;
+        padding: 3rem 1.5rem;
+      }
+
+      .hero h1 {
+        font-size: 2.8rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1.2rem;
+      }
+
+      .hero-ctas {
+        flex-direction: column;
+      }
+
+      .btn-primary, .btn-secondary {
+        width: 100%;
+      }
+    }
+
+    /* ==================== FEATURES SECTION ==================== */
+    .features {
+      padding: 7rem 2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 5rem;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .section-tag {
+      display: inline-block;
+      padding: 0.5rem 1.2rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-primary);
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .section-header h2 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-header p {
+      font-size: 1.1rem;
+      color: var(--text-tertiary);
+      line-height: 1.7;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: linear-gradient(135deg, 
+        rgba(21, 24, 41, 0.6), 
+        rgba(31, 41, 55, 0.4));
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      border-radius: 16px;
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+      animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      opacity: 0;
+    }
+
+    .feature-card:nth-child(1) { animation-delay: 0.1s; }
+    .feature-card:nth-child(2) { animation-delay: 0.2s; }
+    .feature-card:nth-child(3) { animation-delay: 0.3s; }
+    .feature-card:nth-child(4) { animation-delay: 0.4s; }
+    .feature-card:nth-child(5) { animation-delay: 0.5s; }
+    .feature-card:nth-child(6) { animation-delay: 0.6s; }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, 
+        rgba(16, 185, 129, 0.1), 
+        transparent);
+      opacity: 0;
+      transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 0;
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(16, 185, 129, 0.4);
+      transform: translateY(-12px);
+      box-shadow: 0 25px 60px rgba(16, 185, 129, 0.15);
+    }
+
+    .feature-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, 
+        rgba(16, 185, 129, 0.2), 
+        rgba(20, 184, 166, 0.1));
+      border: 2px solid var(--accent-primary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      color: var(--accent-primary);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .feature-card:hover .feature-icon {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: white;
+      transform: scale(1.1) rotateY(360deg);
+    }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--text-primary);
+    }
+
+    .feature-card p {
+      color: var(--text-tertiary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* ==================== INTEGRATION SECTION ==================== */
+    .integration {
+      padding: 7rem 2rem;
+      background: linear-gradient(180deg, 
+        rgba(10, 14, 39, 0.4), 
+        rgba(15, 20, 40, 0.8));
+      position: relative;
+      z-index: 2;
+    }
+
+    .steps-grid {
+      max-width: 1300px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    .step-card {
+      background: linear-gradient(135deg, 
+        rgba(21, 24, 41, 0.8), 
+        rgba(31, 41, 55, 0.5));
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      border-radius: 16px;
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+      animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      opacity: 0;
+    }
+
+    .step-card:nth-child(1) { animation-delay: 0.1s; }
+    .step-card:nth-child(2) { animation-delay: 0.2s; }
+    .step-card:nth-child(3) { animation-delay: 0.3s; }
+    .step-card:nth-child(4) { animation-delay: 0.4s; }
+    .step-card:nth-child(5) { animation-delay: 0.5s; }
+    .step-card:nth-child(6) { animation-delay: 0.6s; }
+
+    .step-card:hover {
+      border-color: rgba(16, 185, 129, 0.4);
+      transform: translateY(-8px);
+      box-shadow: 0 20px 50px rgba(16, 185, 129, 0.1);
+    }
+
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: white;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .step-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.85rem;
+      color: var(--text-primary);
+    }
+
+    .step-card p {
+      color: var(--text-tertiary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    .code-block {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 8px;
+      padding: 1.2rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      color: var(--accent-light);
+      line-height: 1.5;
+      overflow-x: auto;
+      backdrop-filter: blur(5px);
+      transition: all 0.3s ease;
+    }
+
+    .step-card:hover .code-block {
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+    }
+
+    .flow-diagram {
+      background: linear-gradient(135deg, 
+        rgba(21, 24, 41, 0.8), 
+        rgba(31, 41, 55, 0.5));
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      border-radius: 16px;
+      padding: 3.5rem 2rem;
+      max-width: 1300px;
+      margin: 0 auto;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .flow-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 2.5rem;
+      color: var(--text-primary);
+    }
+
+    .flow-items {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .flow-label {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, 
+        rgba(16, 185, 129, 0.1), 
+        rgba(20, 184, 166, 0.05));
+      border: 1.5px solid rgba(16, 185, 129, 0.3);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      font-weight: 600;
+      white-space: nowrap;
+      backdrop-filter: blur(5px);
+    }
+
+    .flow-arrow {
+      color: var(--accent-primary);
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .flow-items {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .flow-arrow {
+        transform: rotate(90deg);
+      }
+    }
+
+    /* ==================== 3D CANVAS SECTION ==================== */
+    .canvas-section {
+      padding: 7rem 2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .canvas-container {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    #threeDCanvas {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      background: linear-gradient(135deg, rgba(21, 24, 41, 0.8), rgba(31, 41, 55, 0.5));
+      height: auto;
+      aspect-ratio: 16 / 10;
+      display: block;
+      transition: all 0.4s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    #threeDCanvas:hover {
+      border-color: rgba(16, 185, 129, 0.3);
+      box-shadow: 0 20px 50px rgba(16, 185, 129, 0.15);
+    }
+
+    .canvas-description {
+      text-align: center;
+      margin-top: 2.5rem;
+      color: var(--text-tertiary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .canvas-description strong {
+      color: var(--text-primary);
+    }
+
+    /* ==================== CTA SECTION ==================== */
+    .cta-section {
+      padding: 7rem 2rem;
+      position: relative;
+      z-index: 2;
+      text-align: center;
+    }
+
+    .cta-section h2 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cta-section p {
+      font-size: 1.2rem;
+      color: var(--text-tertiary);
+      margin-bottom: 3rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ==================== FOOTER ==================== */
+    footer {
+      padding: 3rem 2rem;
+      border-top: 1px solid rgba(100, 116, 139, 0.1);
+      background: linear-gradient(180deg, 
+        rgba(21, 24, 41, 0.6), 
+        rgba(15, 20, 40, 0.8));
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      backdrop-filter: blur(10px);
+    }
+
+    footer p {
+      color: var(--text-tertiary);
+      font-size: 0.9rem;
+    }
+
+    /* ==================== UTILITY ==================== */
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 480px) {
+      .section-header h2 {
+        font-size: 2rem;
+      }
+
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+
+      .features-grid, .steps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ANIMATED BACKGROUND -->
+  <div class="animated-bg">
+    <div class="gradient-blob blob-1"></div>
+    <div class="gradient-blob blob-2"></div>
+    <div class="gradient-blob blob-3"></div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <nav>
+    <div class="logo">NM Auth</div>
+    <nav-links>
+      <a href="#features">Features</a>
+      <a href="#integration">Integration</a>
+      <a href="#canvas">Architecture</a>
+      <a href="#docs">Docs</a>
+      <button class="nav-cta">Get Started</button>
+    </nav-links>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-tag">
+        <i class="fas fa-shield-alt"></i>&nbsp; Enterprise-Grade OAuth 2.0
+      </div>
+      <h1>Secure Authentication<br/>Made Simple</h1>
+      <p class="hero-subtitle">OAuth 2.0 and OpenID Connect identity provider trusted by developers worldwide</p>
+      <p class="hero-description">Integrate enterprise-grade authentication in minutes. Standards-compliant, developer-friendly, and built for scale.</p>
+      <div class="hero-ctas">
+        <button class="btn-primary">
+          <i class="fas fa-rocket"></i>&nbsp; Start Integration
+        </button>
+        <button class="btn-secondary">
+          <i class="fas fa-book"></i>&nbsp; Read Docs
+        </button>
+      </div>
+    </div>
+    <div class="scroll-indicator">
+      <i class="fas fa-chevron-down"></i>
+    </div>
+  </section>
+
+  <!-- FEATURES SECTION -->
+  <section class="features" id="features">
+    <div class="section-header">
+      <div class="section-tag">
+        <i class="fas fa-star"></i>&nbsp; CORE CAPABILITIES
+      </div>
+      <h2>Powerful Features</h2>
+      <p>Everything you need for secure, standards-based authentication infrastructure</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-content">
+          <div class="feature-icon"><i class="far fa-shield"></i></div>
+          <h3>Authorization Code Flow</h3>
+          <p>Industry-standard OAuth 2.0 implementation with full PKCE support for both public and confidential clients.</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-content">
+          <div class="feature-icon"><i class="far fa-id-card"></i></div>
+          <h3>OpenID Connect</h3>
+          <p>Complete OpenID Connect compliance with signed and verified ID tokens for robust user authentication.</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-content">
+          <div class="feature-icon"><i class="far fa-lock"></i></div>
+          <h3>Secure JWT (RS256)</h3>
+          <p>Cryptographically signed tokens using RS256 algorithm with automatic key rotation and management.</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-content">
+          <div class="feature-icon"><i class="far fa-user-circle"></i></div>
+          <h3>User Info Endpoint</h3>
+          <p>Fetch standardized user claims and profile data with a simple RESTful endpoint call.</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-content">
+          <div class="feature-icon"><i class="far fa-check-square"></i></div>
+          <h3>Client Validation</h3>
+          <p>Automatic validation of client credentials and redirect URIs with configurable security policies.</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-content">
+          <div class="feature-icon"><i class="far fa-tachometer-alt"></i></div>
+          <h3>Developer-First API</h3>
+          <p>Clean REST APIs, comprehensive SDKs, and excellent documentation for seamless integration.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTEGRATION SECTION -->
+  <section class="integration" id="integration">
+    <div class="section-header">
+      <div class="section-tag">
+        <i class="fas fa-code"></i>&nbsp; IMPLEMENTATION GUIDE
+      </div>
+      <h2>OAuth 2.0 Flow</h2>
+      <p>Simple, secure, and standards-compliant authentication pipeline</p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h3>Initiate Auth</h3>
+        <p>Redirect users to NM Auth with client credentials and callback URL.</p>
+        <div class="code-block">GET /nm-auth<br>?client_id=XXX<br>&redirect_uri=https://app.com/callback</div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h3>User Sign-In</h3>
+        <p>User authenticates securely through NM Auth UI with credentials.</p>
+        <div class="code-block">User enters credentials<br>Grants permission<br>NM Auth validates</div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h3>Authorization Code</h3>
+        <p>Receive short-lived authorization code for secure token exchange.</p>
+        <div class="code-block">GET /callback<br>?code=AUTH_CODE_123<br>&state=xyz</div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h3>Token Exchange</h3>
+        <p>Exchange authorization code for access and ID tokens securely.</p>
+        <div class="code-block">POST /token<br>{code, client_id,<br>client_secret}</div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">5</div>
+        <h3>Receive Tokens</h3>
+        <p>Get signed access token, ID token, and refresh token for your app.</p>
+        <div class="code-block">{access_token,<br>id_token,<br>token_type: Bearer}</div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">6</div>
+        <h3>Fetch User Data</h3>
+        <p>Use access token to retrieve user profile from userinfo endpoint.</p>
+        <div class="code-block">GET /userinfo<br>Authorization:<br>Bearer TOKEN</div>
+      </div>
+    </div>
+
+    <div class="flow-diagram">
+      <div class="flow-title">Complete OAuth 2.0 Flow Architecture</div>
+      <div class="flow-items">
+        <div class="flow-label"><i class="fas fa-laptop"></i> Client App</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-label"><i class="fas fa-server"></i> NM Auth Server</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-label"><i class="fas fa-laptop"></i> Client (Authorized)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-label"><i class="fas fa-database"></i> User Info</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3D CANVAS SECTION -->
+  <section class="canvas-section" id="canvas">
+    <div class="section-header">
+      <div class="section-tag">
+        <i class="fas fa-cube"></i>&nbsp; INTERACTIVE VISUALIZATION
+      </div>
+      <h2>OAuth Architecture in Motion</h2>
+      <p>Explore how authentication flows work in real-time</p>
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="threeDCanvas"></canvas>
+      <div class="canvas-description">
+        <strong>3D OAuth 2.0 Architecture</strong> — Interactive visualization of secure token exchange and authentication pathways
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA SECTION -->
+  <section class="cta-section">
+    <h2>Ready to Secure Your Application?</h2>
+    <p>Join hundreds of developers who trust NM Auth for their authentication infrastructure</p>
+    <button class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.05rem;">
+      <i class="fas fa-rocket"></i>&nbsp; Get Started Free
+    </button>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2024 NM Auth Service. Enterprise authentication for developers. Built with <i class="fas fa-heart" style="color: var(--accent-primary);"></i> by the team.</p>
+  </footer>
+
+  <script>
+    // ==================== SMOOTH SCROLL & INTERACTIONS ====================
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href !== '#' && document.querySelector(href)) {
+          e.preventDefault();
+          document.querySelector(href).scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Intersection Observer for animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .step-card').forEach(el => {
+      observer.observe(el);
+    });
+
+    // ==================== 3D CANVAS VISUALIZATION ====================
+    const canvas = document.getElementById('threeDCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const colors = {
+      accent: '#10b981',
+      accentSecondary: '#14b8a6',
+      accentLight: '#6ee7b7',
+      text: '#f8fafc',
+      textSecondary: '#cbd5e1',
+      border: '#334155',
+      bg: '#151829'
+    };
+
+    // 3D Point
+    class Point3D {
+      constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.vx = (Math.random() - 0.5) * 0.003;
+        this.vy = (Math.random() - 0.5) * 0.003;
+        this.vz = (Math.random() - 0.5) * 0.003;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.z += this.vz;
+
+        if (this.x > 280) this.vx = -Math.abs(this.vx);
+        if (this.x < -280) this.vx = Math.abs(this.vx);
+        if (this.y > 280) this.vy = -Math.abs(this.vy);
+        if (this.y < -280) this.vy = Math.abs(this.vy);
+        if (this.z > 280) this.vz = -Math.abs(this.vz);
+        if (this.z < -280) this.vz = Math.abs(this.vz);
+      }
+
+      project() {
+        const perspective = 600 / (this.z + 600);
+        return {
+          x: this.x * perspective,
+          y: this.y * perspective,
+          depth: (this.z + 600) / 1200,
+          perspective
+        };
+      }
+    }
+
+    // Node
+    class Node {
+      constructor(x, y, z, label, color) {
+        this.point = new Point3D(x, y, z);
+        this.label = label;
+        this.color = color;
+        this.radius = 32;
+        this.rotation = Math.random() * Math.PI * 2;
+        this.pulsePhase = Math.random() * Math.PI * 2;
+      }
+
+      update() {
+        this.point.update();
+        this.rotation += 0.003;
+        this.pulsePhase += 0.008;
+      }
+
+      draw(ctx, offsetX, offsetY) {
+        const proj = this.point.project();
+        const x = offsetX + proj.x;
+        const y = offsetY + proj.y;
+
+        const pulse = Math.sin(this.pulsePhase) * 1;
+        const radius = this.radius + pulse;
+
+        // Glow
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, radius + 15);
+        glow.addColorStop(0, this.color + '22');
+        glow.addColorStop(1, this.color + '00');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Main circle
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Ring
+        ctx.strokeStyle = this.color + '44';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 22, this.rotation, this.rotation + Math.PI * 0.4);
+        ctx.stroke();
+
+        // Label
+        ctx.fillStyle = colors.text;
+        ctx.font = 'bold 12px Inter';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.label, x, y);
+      }
+    }
+
+    // Connection
+    class Connection {
+      constructor(node1, node2, animated = false) {
+        this.node1 = node1;
+        this.node2 = node2;
+        this.animated = animated;
+        this.phase = 0;
+      }
+
+      update() {
+        if (this.animated) this.phase = (this.phase + 0.003) % 1;
+      }
+
+      draw(ctx, offsetX, offsetY) {
+        const proj1 = this.node1.point.project();
+        const proj2 = this.node2.point.project();
+
+        const x1 = offsetX + proj1.x;
+        const y1 = offsetY + proj1.y;
+        const x2 = offsetX + proj2.x;
+        const y2 = offsetY + proj2.y;
+
+        ctx.strokeStyle = colors.border;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        if (this.animated) {
+          const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+          const pos = (this.phase * length) % length;
+
+          ctx.strokeStyle = colors.accentLight;
+          ctx.lineWidth = 2;
+          ctx.globalAlpha = 0.5;
+          ctx.beginPath();
+          const sx = x1 + (x2 - x1) * (pos / length);
+          const sy = y1 + (y2 - y1) * (pos / length);
+          const ex = x1 + (x2 - x1) * ((pos + 50) / length);
+          const ey = y1 + (y2 - y1) * ((pos + 50) / length);
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(ex, ey);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
+
+    // Particle
+    class Particle {
+      constructor(x, y, z) {
+        this.point = new Point3D(x, y, z);
+        this.life = 1;
+        this.decay = Math.random() * 0.0015 + 0.0005;
+      }
+
+      update() {
+        this.point.update();
+        this.life -= this.decay;
+      }
+
+      draw(ctx, offsetX, offsetY) {
+        if (this.life <= 0) return;
+        const proj = this.point.project();
+        ctx.fillStyle = colors.accentLight + Math.floor(this.life * 150).toString(16).padStart(2, '0');
+        ctx.beginPath();
+        ctx.arc(offsetX + proj.x, offsetY + proj.y, 1 * this.life, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Setup
+    const nodes = [
+      new Node(-180, -140, 0, 'Client', colors.accentLight),
+      new Node(0, -190, 80, 'Auth Server', colors.accentSecondary),
+      new Node(180, -140, 0, 'Token', colors.accentLight),
+      new Node(150, 150, -80, 'UserInfo', colors.accentLight),
+      new Node(-150, 150, 80, 'Refresh', colors.accentLight),
+      new Node(0, 50, 180, 'JWT', colors.accentSecondary)
+    ];
+
+    const connections = [
+      new Connection(nodes[0], nodes[1], true),
+      new Connection(nodes[1], nodes[2], true),
+      new Connection(nodes[2], nodes[3], true),
+      new Connection(nodes[3], nodes[4], false),
+      new Connection(nodes[4], nodes[0], false),
+      new Connection(nodes[1], nodes[5], false),
+      new Connection(nodes[5], nodes[2], true),
+    ];
+
+    let particles = [];
+    let frameCount = 0;
+
+    function emitParticles(node) {
+      for (let i = 0; i < 1; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const x = node.point.x + Math.cos(angle) * 0.5;
+        const y = node.point.y + Math.sin(angle) * 0.5;
+        const z = node.point.z + (Math.random() - 0.5) * 40;
+        particles.push(new Particle(x, y, z));
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = colors.bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const centerX = canvas.width / (2 * window.devicePixelRatio);
+      const centerY = canvas.height / (2 * window.devicePixelRatio);
+
+      nodes.forEach(node => {
+        node.update();
+        if (frameCount % 100 === 0) emitParticles(node);
+      });
+
+      connections.forEach(conn => {
+        conn.update();
+        conn.draw(ctx, centerX, centerY);
+      });
+
+      particles = particles.filter(p => p.life > 0);
+      particles.forEach(p => {
+        p.update();
+        p.draw(ctx, centerX, centerY);
+      });
+
+      nodes.sort((a, b) => a.point.z - b.point.z);
+      nodes.forEach(node => node.draw(ctx, centerX, centerY));
+
+      frameCount++;
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    // Parallax effect on scroll
+    let scrollY = 0;
+    window.addEventListener('scroll', () => {
+      scrollY = window.scrollY;
+      const blobElements = document.querySelectorAll('.gradient-blob');
+      blobElements.forEach((blob, index) => {
+        blob.style.transform = `translate(0, ${scrollY * (0.1 + index * 0.05)}px)`;
+      });
+    });
+  </script>
+</body>
+</html>

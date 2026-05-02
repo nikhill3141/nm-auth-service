@@ -20,9 +20,13 @@ async function start() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  app.get("/health", (req, res) =>
-    res.json({ message: "Server is healthy", healthy: true }),
+  app.get("/health", (req, res) =>{
+    return res.json({ message: "Server is healthy", healthy: true })
+  }
   );
+  app.get("/", (req, res )=>{
+    return res.sendFile(path.resolve("public", "landing.html"))
+  })
 
   app.use(
     session({
@@ -35,6 +39,7 @@ async function start() {
   app.use(errorHandler);
 
   app.use(express.static(path.resolve("public")));
+
 
   app.use("/", oidcRoutes);
   app.use("/nm-auth", userAuth);

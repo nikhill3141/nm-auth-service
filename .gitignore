@@ -46,6 +46,7 @@ cert/
 *.key
 *.pem
 *.crt
+*.sh
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
