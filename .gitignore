@@ -41,7 +41,11 @@ build/Release
 node_modules/
 jspm_packages/
 
-cert\public-key.pub
+#cert and private keys
+cert/
+*.key
+*.pem
+*.crt
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
