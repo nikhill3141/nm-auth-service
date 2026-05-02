@@ -9,7 +9,7 @@ import JWT from "jsonwebtoken";
 
 //gives all the routes when call on "/.wellknow..."
 const oidcProtocol = (req: Request, res: Response) => {
-  const ISSUER = `http://localhost:${process.env.PORT || 8000}`;
+  const ISSUER = `https://nm-auth-service-l9vk.vercel.app || 8000}`;
   return res.json({
     issuer: ISSUER,
     authorization_endpoint: `${ISSUER}/nm-auth`,
@@ -100,7 +100,7 @@ const tokenController = async (req: Request, res: Response) => {
 
     //delete the authcode
     await AuthCode.deleteOne({ code });
-    const ISSUER = `http://localhost:${process.env.PORT}`;
+    const ISSUER = `https://nm-auth-service-l9vk.vercel.app/`;
     const now = Math.floor(Date.now() / 1000);
 
     //create id token (OIDC-format)
