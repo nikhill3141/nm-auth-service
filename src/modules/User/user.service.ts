@@ -2,12 +2,12 @@ import { Request, Response } from "express";
 import crypto from "node:crypto";
 import { URL } from "node:url";
 import AuthCode from "../Client/authCode.model";
-import  { Types } from "mongoose";
+import { Types } from "mongoose";
 
 const redirectWithCode = async (
   req: Request,
   res: Response,
-  userId:Types.ObjectId,
+  userId: Types.ObjectId,
 ) => {
   //step 1 : veryify client and get
   if (!req.session.client) {
@@ -30,17 +30,19 @@ const redirectWithCode = async (
     expiresAt: new Date(Date.now() + 5 * 60 * 1000),
   });
 
-  // STEP 4: Build redirect URL safely
-  const redirectUrl = new URL(redirectUri);
+  // STEP 4: build URL
+  const baseUrl = new URL(redirectUri);
 
-  redirectUrl.searchParams.set("code", code);
-
-  if (state) {
-    redirectUrl.searchParams.set("state", state);
+  //  append /callback ONLY if not present
+  if (!baseUrl.pathname.endsWith("/callback")) {
+    baseUrl.pathname = baseUrl.pathname.replace(/\/$/, "") + "/callback";
   }
 
-  // ✅ STEP 5: Redirect back to client
-  return res.redirect(redirectUrl.toString());
+  // STEP 4: attach params
+  baseUrl.searchParams.set("code", code);
+
+  //  STEP 5: Redirect back to client
+  return res.redirect(baseUrl.toString());
 };
 
 export { redirectWithCode };
