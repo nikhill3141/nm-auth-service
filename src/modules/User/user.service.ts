@@ -33,12 +33,8 @@ const redirectWithCode = async (
   // STEP 4: build URL
   const baseUrl = new URL(redirectUri);
 
-  //  append /callback ONLY if not present
-  if (!baseUrl.pathname.endsWith("/callback")) {
-    baseUrl.pathname = baseUrl.pathname.replace(/\/$/, "") + "/callback";
-  }
 
-  // STEP 4: attach params
+ 
   baseUrl.searchParams.set("code", code);
 
   //  STEP 5: Redirect back to client
