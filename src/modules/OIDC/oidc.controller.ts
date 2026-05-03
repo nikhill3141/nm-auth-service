@@ -9,7 +9,7 @@ import JWT from "jsonwebtoken";
 
 //gives all the routes when call on "/.wellknow..."
 const oidcProtocol = (req: Request, res: Response) => {
-  const ISSUER = `https://nm-auth-service-l9vk.vercel.app || 8000}`;
+  const ISSUER = `https://nm-auth-service.onrender.com || 8000}`;
   return res.json({
     issuer: ISSUER,
     authorization_endpoint: `${ISSUER}/nm-auth`,
